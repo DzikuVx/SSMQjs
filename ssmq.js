@@ -15,6 +15,11 @@ function MySqlQueue (sQueueName) {
 
     var self = {};
 
+    /**
+     * Method get queue id from database
+     * If queue is not registered, method adds new entry
+     * @private
+     */
     var getQueueId = function () {
 
         connection.query( "SELECT * FROM `queues` WHERE `name`=" + connection.escape(sQueueName) + " LIMIT 1", function(err, rows) {
@@ -44,7 +49,7 @@ function MySqlQueue (sQueueName) {
                 console.log('we have id');
             }
         });
-    }
+    };
 
     var connect = function () {
 
@@ -55,11 +60,20 @@ function MySqlQueue (sQueueName) {
             database : mysqlCredentials.database
         });
 
-    }
+    };
 
     self.push = function (sMessage, sRecipient, aAttributes) {
 
         if (queuePrepared) {
+
+            connection.query( "INSERT INTO `messages`(idqueues, recipient, message, attributes) VALUES(" + queueId + ", " + connection.escape(sRecipient) + ", " + connection.escape(sMessage) + ", " + connection.escape(JSON.stringify(aAttributes)) + ")", function(err, result) {
+
+                if (err) {
+                    throw err;
+                }
+
+                console.log('Inserted');
+            });
 
         } else {
             setTimeout(function () {
@@ -67,7 +81,7 @@ function MySqlQueue (sQueueName) {
             }, 10);
         }
 
-    }
+    };
 
     connect();
     getQueueId();
@@ -100,7 +114,7 @@ var SSMQ = (function () {
         mysqlCredentials.user       = user;
         mysqlCredentials.password   = password;
         mysqlCredentials.database   = database;
-    }
+    };
 
     self.create = function (sQueue) {
         if (!aQueues[sQueue]) {
@@ -108,7 +122,7 @@ var SSMQ = (function () {
         }
 
         return aQueues[sQueue];
-    }
+    };
 
     return self;
 })();
